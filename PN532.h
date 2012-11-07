@@ -43,35 +43,33 @@
 #define KEY_B	2
 
 
-class PN532{
+class PN532 {
 public:
-    PN532(uint8_t cs, uint8_t clk, uint8_t mosi, uint8_t miso);
-
-    void begin(void);
-
-    boolean SAMConfig(void);
-    uint32_t getFirmwareVersion(void);
-    uint32_t readPassiveTargetID(uint8_t cardbaudrate);
-    uint32_t authenticateBlock(	uint8_t cardnumber /*1 or 2*/,
+	PN532(uint8_t cs, uint8_t clk, uint8_t mosi, uint8_t miso);
+	
+	void begin(void);
+	
+	boolean SAMConfig(void);
+	uint32_t getFirmwareVersion(void);
+	uint32_t readPassiveTargetID(uint8_t cardbaudrate);
+	uint32_t authenticateBlock(uint8_t cardnumber /*1 or 2*/,
 				uint32_t cid /*Card NUID*/,
 				uint8_t blockaddress /*0 to 63*/,
 				uint8_t authtype /*Either KEY_A or KEY_B */,
 				uint8_t * keys);
-
-    uint32_t readMemoryBlock(uint8_t cardnumber /*1 or 2*/,uint8_t blockaddress /*0 to 63*/, uint8_t * block);
-    uint32_t writeMemoryBlock(uint8_t cardnumber /*1 or 2*/,uint8_t blockaddress /*0 to 63*/, uint8_t * block);
-
-    boolean sendCommandCheckAck(uint8_t *cmd, uint8_t cmdlen, uint16_t timeout = 1000);
-
-    //
-
+	
+	uint32_t readMemoryBlock(uint8_t cardnumber /*1 or 2*/,uint8_t blockaddress /*0 to 63*/, uint8_t * block);
+	uint32_t writeMemoryBlock(uint8_t cardnumber /*1 or 2*/,uint8_t blockaddress /*0 to 63*/, uint8_t * block);
+	
+	boolean sendCommandCheckAck(uint8_t *cmd, uint8_t cmdlen, uint16_t timeout = 1000);
+	
 private:
-    uint8_t _ss, _clk, _mosi, _miso;
-
-    boolean spi_readack();
-    uint8_t readspistatus(void);
-    void readspidata(uint8_t* buff, uint8_t n);
-    void spiwritecommand(uint8_t* cmd, uint8_t cmdlen);
-    void spiwrite(uint8_t c);
-    uint8_t spiread(void);
+	uint8_t _ss, _clk, _mosi, _miso;
+	
+	boolean spi_readack();
+	uint8_t readspistatus(void);
+	void readspidata(uint8_t* buff, uint8_t n);
+	void spiwritecommand(uint8_t* cmd, uint8_t cmdlen);
+	void spiwrite(uint8_t c);
+	uint8_t spiread(void);
 };
