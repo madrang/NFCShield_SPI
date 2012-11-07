@@ -117,16 +117,16 @@ boolean PN532::SAMConfig(void) {
 }
 
 uint32_t PN532::authenticateBlock(uint8_t cardnumber /*1 or 2*/,uint32_t cid /*Card NUID*/, uint8_t blockaddress /*0 to 63*/,uint8_t authtype/*Either KEY_A or KEY_B */, uint8_t * keys) {
-    pn532_packetbuffer[0] = PN532_INDATAEXCHANGE;
-    pn532_packetbuffer[1] = cardnumber;  // either card 1 or 2 (tested for card 1)
-    if(authtype == KEY_A)
-    {
-        pn532_packetbuffer[2] = PN532_AUTH_WITH_KEYA;
-    }
-    else
-    {
-        pn532_packetbuffer[2] = PN532_AUTH_WITH_KEYB;
-    }
+	pn532_packetbuffer[0] = PN532_INDATAEXCHANGE;
+	
+	// either card 1 or 2 (tested for card 1)
+    pn532_packetbuffer[1] = cardnumber;
+
+ 	if(authtype == KEY_A) {
+		pn532_packetbuffer[2] = PN532_AUTH_WITH_KEYA;
+	} else {
+		pn532_packetbuffer[2] = PN532_AUTH_WITH_KEYB;
+	}
     pn532_packetbuffer[3] = blockaddress; //This address can be 0-63 for MIFARE 1K card
 
     pn532_packetbuffer[4] = keys[0];
@@ -148,19 +148,18 @@ uint32_t PN532::authenticateBlock(uint8_t cardnumber /*1 or 2*/,uint32_t cid /*C
     readspidata(pn532_packetbuffer, 2+6);
 
 #ifdef PN532DEBUG
-    for(int iter=0;iter<14;iter++)
-    {
-        Serial.print(pn532_packetbuffer[iter], HEX);
-        Serial.print(" ");
-    }
-    Serial.println();
-    // check some basic stuff
-
-    Serial.println("AUTH");
-    for(uint8_t i=0;i<2+6;i++)
-    {
-        Serial.print(pn532_packetbuffer[i], HEX); Serial.println(" ");
-    }
+	for(int iter=0;iter<14;iter++) {
+		Serial.print(pn532_packetbuffer[iter], HEX);
+		Serial.print(" ");
+	}
+	Serial.println();
+	// check some basic stuff
+	
+	Serial.println("AUTH");
+	for(uint8_t i=0;i<2+6;i++) {
+		Serial.print(pn532_packetbuffer[i], HEX);
+		Serial.println(" ");
+	}
 #endif
 
     if((pn532_packetbuffer[6] == 0x41) && (pn532_packetbuffer[7] == 0x00))
@@ -185,26 +184,32 @@ uint32_t PN532::readMemoryBlock(uint8_t cardnumber /*1 or 2*/,uint8_t blockaddre
 
     // read data packet
     readspidata(pn532_packetbuffer, 18+6);
+
     // check some basic stuff
 #ifdef PN532DEBUG
     Serial.println("READ");
 #endif
-    for(uint8_t i=8;i<18+6;i++)
-    {
-        block[i-8] = pn532_packetbuffer[i];
+
+    for(uint8_t i=8;i<18+6;i++) {
+		block[i-8] = pn532_packetbuffer[i];
+
 #ifdef PN532DEBUG
-        Serial.print(pn532_packetbuffer[i], HEX); Serial.print(" ");
+		Serial.print(pn532_packetbuffer[i], HEX);
+		Serial.print(" ");
 #endif
     }
-    if((pn532_packetbuffer[6] == 0x41) && (pn532_packetbuffer[7] == 0x00))
-    {
-  	return true; //read successful
-    }
-    else
-    {
-  	return false;
-    }
 
+#ifdef PN532DEBUG
+    Serial.println("");
+    Serial.println("READDONE");
+#endif
+
+    
+    if((pn532_packetbuffer[6] == 0x41) && (pn532_packetbuffer[7] == 0x00)) {
+		return true; //read successful
+	} else {
+		return false;
+	}
 }
 
 //Do not write to Sector Trailer Block unless you know what you are doing.
@@ -233,13 +238,11 @@ uint32_t PN532::writeMemoryBlock(uint8_t cardnumber /*1 or 2*/,uint8_t blockaddr
     }
 #endif
 
-    if((pn532_packetbuffer[6] == 0x41) && (pn532_packetbuffer[7] == 0x00))
-    {
-  	return true; //write successful
-    }
-    else
-    {
-  	return false;
+    if((pn532_packetbuffer[6] == 0x41) && (pn532_packetbuffer[7] == 0x00)) {
+		//write successful
+		return true;
+	} else {
+		return false;
     }
 }
 
@@ -257,30 +260,46 @@ uint32_t PN532::readPassiveTargetID(uint8_t cardbaudrate) {
     readspidata(pn532_packetbuffer, 20);
     // check some basic stuff
 
-    Serial.print("Found "); Serial.print(pn532_packetbuffer[7], DEC); Serial.println(" tags");
+#ifdef PN532DEBUG
+	Serial.print("Found ");
+	Serial.print(pn532_packetbuffer[7], DEC);
+	Serial.println(" tags");
+#endif
+	
     if (pn532_packetbuffer[7] != 1)
         return 0;
     
     uint16_t sens_res = pn532_packetbuffer[9];
     sens_res <<= 8;
     sens_res |= pn532_packetbuffer[10];
-    Serial.print("Sens Response: 0x");  Serial.println(sens_res, HEX);
-    Serial.print("Sel Response: 0x");  Serial.println(pn532_packetbuffer[11], HEX);
+    
+#ifdef PN532DEBUG
+	Serial.print("Sens Response: 0x");
+	Serial.println(sens_res, HEX);
+	Serial.print("Sel Response: 0x");
+	Serial.println(pn532_packetbuffer[11], HEX);
+#endif
+	
     cid = 0;
-    for (uint8_t i=0; i< pn532_packetbuffer[12]; i++) {
+    for (uint8_t i=0; i < pn532_packetbuffer[12]; i++) {
         cid <<= 8;
         cid |= pn532_packetbuffer[13+i];
-        Serial.print(" 0x"); Serial.print(pn532_packetbuffer[13+i], HEX);
+
+#ifdef PN532DEBUG
+		Serial.print(" 0x");
+		Serial.print(pn532_packetbuffer[13+i], HEX);
+#endif
+		
     }
 
 #ifdef PN532DEBUG
-    Serial.println("TargetID");
-    for(uint8_t i=0;i<20;i++)
-    {
-        Serial.print(pn532_packetbuffer[i], HEX); Serial.println(" ");
-    }
-#endif  
-    return cid;
+	Serial.println("TargetID");
+	for(uint8_t i=0; i < 20; i++) {
+		Serial.print(pn532_packetbuffer[i], HEX);
+		Serial.println(" ");
+	}
+#endif
+	return cid;
 }
 
 
@@ -360,19 +379,31 @@ void PN532::spiwritecommand(uint8_t* cmd, uint8_t cmdlen) {
     checksum += PN532_HOSTTOPN532;
 
 #ifdef PN532DEBUG
-    Serial.print(" 0x"); Serial.print(PN532_PREAMBLE, HEX);
-    Serial.print(" 0x"); Serial.print(PN532_PREAMBLE, HEX);
-    Serial.print(" 0x"); Serial.print(PN532_STARTCODE2, HEX);
-    Serial.print(" 0x"); Serial.print(cmdlen, HEX);
-    Serial.print(" 0x"); Serial.print(cmdlen_1, HEX);
-    Serial.print(" 0x"); Serial.print(PN532_HOSTTOPN532, HEX);
+    Serial.print(" 0x");
+    Serial.print(PN532_PREAMBLE, HEX);
+    
+    Serial.print(" 0x");
+    Serial.print(PN532_PREAMBLE, HEX);
+    
+    Serial.print(" 0x");
+    Serial.print(PN532_STARTCODE2, HEX);
+    
+    Serial.print(" 0x");
+    Serial.print(cmdlen, HEX);
+    
+    Serial.print(" 0x");
+    Serial.print(cmdlen_1, HEX);
+    
+    Serial.print(" 0x");
+    Serial.print(PN532_HOSTTOPN532, HEX);
 #endif
 
     for (uint8_t i=0; i<cmdlen-1; i++) {
         spiwrite(cmd[i]);
         checksum += cmd[i];
 #ifdef PN532DEBUG
-        Serial.print(" 0x"); Serial.print(cmd[i], HEX);
+		Serial.print(" 0x");
+		Serial.print(cmd[i], HEX);
 #endif
     }
     uint8_t checksum_1=~checksum;
@@ -381,9 +412,12 @@ void PN532::spiwritecommand(uint8_t* cmd, uint8_t cmdlen) {
     digitalWrite(_ss, HIGH);
 
 #ifdef PN532DEBUG
-    Serial.print(" 0x"); Serial.print(checksum_1, HEX);
-    Serial.print(" 0x"); Serial.print(PN532_POSTAMBLE, HEX);
-    Serial.println();
+    Serial.print(" 0x");
+    Serial.print(checksum_1, HEX);
+    
+    Serial.print(" 0x");
+    Serial.print(PN532_POSTAMBLE, HEX);
+	Serial.println();
 #endif
 } 
 /************** low level SPI */
